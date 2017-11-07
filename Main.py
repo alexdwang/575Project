@@ -5,13 +5,14 @@ import csv
 import heapq
 import math
 import numpy as np
-from numpy import linalg as la
 import time
 import pickle
 from operator import itemgetter
 from datetime import datetime
 from collections import defaultdict
 
+import pearson
+import euclidean
 
 def load_reviews(path, **kwargs):
     '''''
@@ -454,28 +455,36 @@ if __name__ == '__main__':
     data = relative_path('u.data')
     item = relative_path('u.item')
     model = MovieLens(data, item)
-
-    for mid, avg, num in model.top_rated(10):
-        title = model.movies[mid]['title']
-        print ("[%0.3f average rating (%i reviews)] %s" % (avg, num, title))
+    # print(model.movies[1]["movieid"])
+    # for key in model.reviews[len(model.reviews) - 1].keys():
+    #     print(model.reviews[len(model.reviews) - 1][key])
+    # for mid, avg, num in model.top_rated(10):
+    #     title = model.movies[mid]['title']
+    #     print ("[%0.3f average rating (%i reviews)] %s" % (avg, num, title))
 
     # print(model.euclidean_distance(631, 532))  # A,B
-    # print(model.pearson_correlation(232, 532))
+    # print(model.pearson_correlation(232, 111))
     # for item in model.similar_critics(232, 'pearson', n=10):
     #     print("%4i: %0.3f" % item)
     # print(model.predict_ranking(422, 50, 'euclidean'))
     # print(model.predict_ranking(422, 50, 'pearson') )
     #
-    # for mid, rating in model.predict_all_rankings(578, 'pearson', 10):
-    #     print('%0.3f: %s' % (rating, model.movies[mid]['title']))
+    # euclidean.getRecomDict_User(model)
+    # pearson.getRecomDict_User(model)
+        # print('%0.3f: %s' % (rating, model.movies[mid]['movieid']))
+    #
+    dict = pearson.getRecomDict_Movie(model)
+    for movie, similarity in model.similar_items(631, 'pearson',10):
+        print('%0.3f : %s' % (similarity, model.movies[movie]['title']))
 
-    # for movie, similarity in model.similar_items(631, 'pearson').items():
-    #     print('%0.3f : %s' % (similarity, model.movies[movie]['title']))
-
-    # print(model.predict_items_recommendation(232, 52, 'pearson'))
-
-    model = Recommender(data)
-    model.load_dataset()
-    print ("building")
-    model.build('svd')
-    print(model.top_rated(1,12))
+    # lastmid = model.movies[len(model.movies) - 1]["movieid"]
+    # lastuid = 942
+    # for user in range(1,lastuid + 1):
+    #     for movie in range(1,lastmid + 1):
+    #         print(model.predict_items_recommendation(user, movie, 'pearson'))
+    #
+    # model = Recommender(data)
+    # model.load_dataset()
+    # print ("building")
+    # model.build('svd')
+    # print(model.top_rated(1,12))
