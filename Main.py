@@ -455,6 +455,14 @@ if __name__ == '__main__':
     data = relative_path('u.data')
     item = relative_path('u.item')
     model = MovieLens(data, item)
+    print("movies type: ", type(model.movies))
+    print("movies[movieid] type: ", type(model.movies[1]))
+    print(model.movies[1].keys())
+    print()
+    print("reviews type: ", type(model.reviews))
+    print("reviews[userid] type: ",type(model.reviews[1]))
+    print("reviews[userid][movieid] type: ", type(model.reviews[1][1]))
+    print(model.reviews[1][1].keys())
     # print(model.movies[1]["movieid"])
     # for key in model.reviews[len(model.reviews) - 1].keys():
     #     print(model.reviews[len(model.reviews) - 1][key])
@@ -473,9 +481,9 @@ if __name__ == '__main__':
     # pearson.getRecomDict_User(model)
         # print('%0.3f: %s' % (rating, model.movies[mid]['movieid']))
     #
-    dict = pearson.getRecomDict_Movie(model)
-    for movie, similarity in model.similar_items(631, 'pearson',10):
-        print('%0.3f : %s' % (similarity, model.movies[movie]['title']))
+    # dict = pearson.getRecomDict_Movie(model)
+    # for movie, similarity in model.similar_items(631, 'pearson',10):
+    #     print('%0.3f : %s' % (similarity, model.movies[movie]['title']))
 
     # lastmid = model.movies[len(model.movies) - 1]["movieid"]
     # lastuid = 942
