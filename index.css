@@ -1,0 +1,62 @@
+
+@import url(https://fonts.googleapis.com/css?family=Lato);
+@import url(https://fonts.googleapis.com/css?family=Lobster);
+
+.list-group-item {
+    display: list-item;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    height: 40px;
+    text-align: justify;
+}
+body {
+  background: url(https://static.pexels.com/photos/1043/red-building-industry-bricks-large.jpg) no-repeat;
+  background-size: cover;
+  color: #FFF;
+  font-family: 'Lato';
+}
+
+#movielist {
+  display:;
+}
+/*h1 {
+	font-family: Anton;
+	font-size: 42px;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: bold;
+	line-height: 26.4px;
+}*/
+
+h1 {
+  margin-top: 20px;
+  font-family: 'Lobster';
+  font-size: 4em;
+  color: black;
+  transform: rotate(-1deg);
+}
+
+ /*p, label, input, button {
+  font-family: Lobster;
+	font-size: 20px;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: 400;
+	line-height: 20px;}*/
+input {
+  font-family: 'Lato';
+}
+
+ol {
+  color: #000;
+}
+
+#emptydiv {
+  margin: 200px;
+}
+
+.radio-inline {
+  padding: 0px, 10px 10px, 0px;
+  margin-left: 3px;
+  margin-right: 3px;
+}
