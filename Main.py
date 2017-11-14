@@ -1,7 +1,6 @@
 #encoding:utf-8
 
 import os
-import csv
 import heapq
 import math
 import numpy as np
@@ -9,7 +8,8 @@ import time
 import pickle
 from operator import itemgetter
 from datetime import datetime
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
+
 
 import pearson
 import euclidean
@@ -18,24 +18,38 @@ def load_reviews(path, **kwargs):
     '''''
     加载电影数据文件
     '''
+    lines = open(path,'r',encoding='ISO-8859-1').readlines()
+    for line in lines:
+        row = OrderedDict()
+        mydata = line.split(sep="::")
+        row['userid'] = int(mydata[0])
+        row['movieid'] = int(mydata[1])
+        row['rating'] = int(mydata[2])
+        row['timestamp'] = mydata[3]
+        # print(row['movieid'])
+        # print(row['userid'])
+        # print(row['rating'])
+        # print (row)
+        yield row
 
-    options = {
-        'fieldnames': ('userid', 'movieid', 'rating', 'timestamp'),
-        'delimiter': '\t'
-    }
 
-    options.update(kwargs)
-    parse_date = lambda r, k: datetime.fromtimestamp(float(r[k]))
-    parse_int = lambda r, k: int(r[k])
-
-    with open(path, 'r',encoding='ISO-8859-1') as reviews:
-        reader = csv.DictReader(reviews, **options)
-        for row in reader:
-            row['movieid'] = parse_int(row, 'movieid')
-            row['userid'] = parse_int(row, 'userid')
-            row['rating'] = parse_int(row, 'rating')
-            row['timestamp'] = parse_date(row, 'timestamp')
-            yield row
+    # options = {
+    #     'fieldnames': ('userid', 'movieid', 'rating', 'timestamp'),
+    #     'delimiter': '\t'
+    # }
+    #
+    # options.update(kwargs)
+    # parse_date = lambda r, k: datetime.fromtimestamp(float(r[k]))
+    # parse_int = lambda r, k: int(r[k])
+    #
+    # with open(path, 'r',encoding='ISO-8859-1') as reviews:
+    #     reader = csv.DictReader(reviews, **options)
+    #     for row in reader:
+    #         row['movieid'] = parse_int(row, 'movieid')
+    #         row['userid'] = parse_int(row, 'userid')
+    #         row['rating'] = parse_int(row, 'rating')
+    #         row['timestamp'] = parse_date(row, 'timestamp')
+    #         yield row
 
 def relative_path(path):
     '''''
@@ -50,32 +64,44 @@ def load_movies(path, **kwargs):
     '''''
     读取电影信息
     '''
-    options = {
-        'fieldnames': ('movieid', 'title', 'release', 'video', 'url'),
-        'delimiter': '|',
-        'restkey': 'genre'
-    }
-    options.update(**kwargs)
-
-    parse_int = lambda r, k: int(r[k])
-    parse_date = lambda r, k: datetime.strptime(r[k], '%d-%b-%Y') if r[k] else None
-
-    with open(path, 'r',encoding='ISO-8859-1') as movies:
-        reader = csv.DictReader(movies, **options)
-        for row in reader:
-            row['movieid'] = parse_int(row, 'movieid')
-            # print row['movieid']
-            row['release'] = parse_date(row, 'release')
-            # print row['release']
-            # print row['video']
-            yield row
+    lines = open(path,'r',encoding='ISO-8859-1').readlines()
+    for line in lines:
+        row = dict()
+        mydata = line.split(sep="::")
+        row['movieid'] = int(mydata[0])
+        row['title'] = mydata[1]
+        row['genre'] = mydata[2]
+        # print(row['movieid'])
+        # print(row['title'])
+        # print(row['genre'])
+        yield row
+    # options = {
+    #     'fieldnames': ('movieid', 'title', 'release', 'video', 'url'),
+    #     'delimiter': '|',
+    #     'restkey': 'genre'
+    # }
+    # options.update(**kwargs)
+    #
+    # parse_int = lambda r, k: int(r[k])
+    # parse_date = lambda r, k: datetime.strptime(r[k], '%d-%b-%Y') if r[k] else None
+    #
+    # with open(path, 'r',encoding='ISO-8859-1') as movies:
+    #     reader = csv.reader(movies, **options)
+    #     for row in reader:
+    #         row['movieid'] = parse_int(row, 'movieid')
+    #
+    #         # print row['movieid']
+    #         #row['release'] = parse_date(row, 'release')
+    #         # print row['release']
+    #         # print row['video']
+    #         yield row
 
 
 class MovieLens(object):
     def __init__(self, udata, uitem):
         self.udata = udata
         self.uitem = uitem
-        self.movies = {}
+        self.movies = OrderedDict()
         self.reviews = defaultdict(dict)
         self.load_dataset()
 
@@ -144,7 +170,12 @@ class MovieLens(object):
         通过两个人的共同偏好作为向量来计算两个用户之间的欧式距离
         '''
         # 创建两个用户的交集
-        preferences = self.share_preferences(criticA, criticB)
+        if prefs == 'users':
+            preferences = self.share_preferences(criticA, criticB)
+        elif prefs == 'movies':
+            preferences = self.shared_critics(criticA, criticB)
+        else:
+            raise Exception("No preferences of type '%s'." % prefs)
 
         # 没有则返回0
         if len(preferences) == 0: return 0
@@ -274,7 +305,7 @@ class MovieLens(object):
         return reviews
 
 
-    def similar_items(self, movie, metric='eculidean', n=None):
+    def similar_items(self, movie, metric='euclidean', n=None):
         metrics = {
             'euclidean': self.euclidean_distance,
             'pearson': self.pearson_correlation,
@@ -452,17 +483,19 @@ class Recommender(object):
         return heapq.nlargest(n, movies, key=itemgetter(1))
 
 if __name__ == '__main__':
-    data = relative_path('u.data')
-    item = relative_path('u.item')
+    data = relative_path('ratings.dat')
+    item = relative_path('movies.dat')
     model = MovieLens(data, item)
-    print("movies type: ", type(model.movies))
-    print("movies[movieid] type: ", type(model.movies[1]))
-    print(model.movies[1].keys())
-    print()
-    print("reviews type: ", type(model.reviews))
-    print("reviews[userid] type: ",type(model.reviews[1]))
-    print("reviews[userid][movieid] type: ", type(model.reviews[1][1]))
-    print(model.reviews[1][1].keys())
+
+    # print("movies type: ", type(model.movies))
+    # print("movies[movieid] type: ", type(model.movies[1]))
+    # print(model.movies[1].keys())
+    # print()
+    # print("reviews type: ", type(model.reviews))
+    # print("reviews[userid] type: ",type(model.reviews[1]))
+    # print("reviews[userid][movieid] type: ", type(model.reviews[1][1]))
+    # print(model.reviews[1][1].keys())
+
     # print(model.movies[1]["movieid"])
     # for key in model.reviews[len(model.reviews) - 1].keys():
     #     print(model.reviews[len(model.reviews) - 1][key])
@@ -477,8 +510,7 @@ if __name__ == '__main__':
     # print(model.predict_ranking(422, 50, 'euclidean'))
     # print(model.predict_ranking(422, 50, 'pearson') )
     #
-    # euclidean.getRecomDict_User(model)
-    # pearson.getRecomDict_User(model)
+
         # print('%0.3f: %s' % (rating, model.movies[mid]['movieid']))
     #
     # dict = pearson.getRecomDict_Movie(model)
@@ -496,3 +528,7 @@ if __name__ == '__main__':
     # print ("building")
     # model.build('svd')
     # print(model.top_rated(1,12))
+
+    # euclidean.getRecomDict_User(model)
+    # euclidean.getRecomDict_Movie(model)
+    pearson.getRecomDict_User(model)

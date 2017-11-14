@@ -10,8 +10,9 @@ def getRecomDict_User(model):
     recommendtouser_dict = {}
     for userid in model.reviews.keys():
         mymovies = []
-        for mid in model.predict_all_rankings(userid, n = 10):
+        for mid in model.predict_all_rankings(userid, n = 20):
             mymovies.append(model.movies[mid[0]]['movieid'])
+        #     print(mid)
         # print("userid = ", userid)
         # print(mymovies)
         recommendtouser_dict[userid] = mymovies
@@ -27,5 +28,7 @@ def getRecomDict_Movie(model):
         mymovies = []
         for movie in model.similar_items(movieid, n = 10):
             mymovies.append(model.movies[movie[0]]['movieid'])
+        print("movie = ", movieid)
+        print(mymovies)
         recommendtomovie_dict[movieid] = mymovies
     return recommendtomovie_dict
