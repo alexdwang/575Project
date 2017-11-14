@@ -16,7 +16,7 @@ import euclidean
 
 def load_reviews(path, **kwargs):
     '''''
-    加载电影数据文件
+    load reviews from file
     '''
     lines = open(path,'r',encoding='ISO-8859-1').readlines()
     for line in lines:
@@ -32,24 +32,6 @@ def load_reviews(path, **kwargs):
         # print (row)
         yield row
 
-
-    # options = {
-    #     'fieldnames': ('userid', 'movieid', 'rating', 'timestamp'),
-    #     'delimiter': '\t'
-    # }
-    #
-    # options.update(kwargs)
-    # parse_date = lambda r, k: datetime.fromtimestamp(float(r[k]))
-    # parse_int = lambda r, k: int(r[k])
-    #
-    # with open(path, 'r',encoding='ISO-8859-1') as reviews:
-    #     reader = csv.DictReader(reviews, **options)
-    #     for row in reader:
-    #         row['movieid'] = parse_int(row, 'movieid')
-    #         row['userid'] = parse_int(row, 'userid')
-    #         row['rating'] = parse_int(row, 'rating')
-    #         row['timestamp'] = parse_date(row, 'timestamp')
-    #         yield row
 
 def relative_path(path):
     '''''
@@ -75,26 +57,7 @@ def load_movies(path, **kwargs):
         # print(row['title'])
         # print(row['genre'])
         yield row
-    # options = {
-    #     'fieldnames': ('movieid', 'title', 'release', 'video', 'url'),
-    #     'delimiter': '|',
-    #     'restkey': 'genre'
-    # }
-    # options.update(**kwargs)
-    #
-    # parse_int = lambda r, k: int(r[k])
-    # parse_date = lambda r, k: datetime.strptime(r[k], '%d-%b-%Y') if r[k] else None
-    #
-    # with open(path, 'r',encoding='ISO-8859-1') as movies:
-    #     reader = csv.reader(movies, **options)
-    #     for row in reader:
-    #         row['movieid'] = parse_int(row, 'movieid')
-    #
-    #         # print row['movieid']
-    #         #row['release'] = parse_date(row, 'release')
-    #         # print row['release']
-    #         # print row['video']
-    #         yield row
+
 
 
 class MovieLens(object):
@@ -106,23 +69,20 @@ class MovieLens(object):
         self.load_dataset()
 
     def load_dataset(self):
-        # 加载数据到内存中，按ID为索引
+        # load dataset into memory
         for movie in load_movies(self.uitem):
             self.movies[movie['movieid']] = movie
 
         for review in load_reviews(self.udata):
             self.reviews[review['userid']][review['movieid']] = review
-            # print self.reviews[review['userid']][review['movieid']]
 
     def reviews_for_movie(self, movieid):
         for review in self.reviews.values():
-            if movieid in review:   #存在则返回
+            if movieid in review:
                 yield review[movieid]
 
 
     def average_reviews(self):
-        # 对所有的电影求平均水平
-
         for movieid in self.movies:
             reviews = list(r['rating'] for r in self.reviews_for_movie(movieid))
             average = sum(reviews) / float(len(reviews))
@@ -529,6 +489,6 @@ if __name__ == '__main__':
     # model.build('svd')
     # print(model.top_rated(1,12))
 
-    # euclidean.getRecomDict_User(model)
+    euclidean.getRecomDict_User(model)
     # euclidean.getRecomDict_Movie(model)
-    pearson.getRecomDict_User(model)
+    # pearson.getRecomDict_User(model)
