@@ -1,6 +1,7 @@
 #encoding:utf-8
 
 import os
+import multiprocessing
 import heapq
 import math
 import numpy as np
@@ -299,31 +300,42 @@ def factor2(R, P=None, Q=None, K=2, steps=5000, alpha=0.0002, beta=0.02):
     return P, Q.T
 
 
-def update_u2m_euclidean(db, model):
+def update_u2m_euclidean(model):
     result = euclidean.getRecomDict_User(model)
+    db = DatabaseHelper(password='asdfghjkl')
     db.save_knn_euclidean_recommend_result(result, type='user')
+    print('End training U2M euclidean')
 
 
-def update_m2m_euclidean(db, model):
+def update_m2m_euclidean(model):
     result = euclidean.getRecomDict_Movie(model)
+    db = DatabaseHelper(password='asdfghjkl')
     db.save_knn_euclidean_recommend_result(result, type='movie')
+    print('End training M2M euclidean')
 
 
-def update_u2m_pearson(db, model):
+def update_u2m_pearson(model):
     result = pearson.getRecomDict_User(model)
+    db = DatabaseHelper(password='asdfghjkl')
     db.save_knn_pearson_recommend_result(result, type='user')
+    print('End training U2M pearson')
 
 
-def update_m2m_pearson(db, model):
+def update_m2m_pearson(model):
     result = pearson.getRecomDict_Movie(model)
+    db = DatabaseHelper(password='asdfghjkl')
     db.save_knn_pearson_recommend_result(result, type='movie')
+    print('End training M2M pearson')
 
 
 if __name__ == '__main__':
     model = MovieLens()
-    db = DatabaseHelper(password='asdfghjkl')
 
-    update_u2m_euclidean(db, model)
-    update_m2m_euclidean(db, model)
-    update_u2m_pearson(db, model)
-    update_m2m_pearson(db, model)
+    process_u2m_eu = multiprocessing.Process(target=update_u2m_euclidean, args=(model,))
+    process_u2m_eu.start()
+    process_m2m_eu = multiprocessing.Process(target=update_m2m_euclidean, args=(model,))
+    process_m2m_eu.start()
+    process_u2m_ps = multiprocessing.Process(target=update_u2m_pearson, args=(model,))
+    process_u2m_ps.start()
+    process_m2m_ps = multiprocessing.Process(target=update_m2m_pearson, args=(model,))
+    process_m2m_ps.start()
