@@ -111,3 +111,6 @@ venv.bak/
 
 # Dataset
 data/
+
+# Test output
+svdOutput.csv
