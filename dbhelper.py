@@ -38,19 +38,21 @@ class DatabaseHelper(object):
             cursor.execute('SELECT id,name FROM movies ORDER BY id')
             for movie in cursor:
                 movies[int(movie[0])] = { 'movieid': movie[0], 'title': movie[1] }
-        return movies;
+        return movies
 
     def get_all_reviews(self):
         reviews = {}
         with self.conn.cursor() as cursor:
+            cursor.execute('SELECT uid FROM ratings')
+            # Create dicts for users
+            for u in cursor:
+                reviews[int(u[0])] = {}
             cursor.execute('SELECT * FROM ratings')
             for rating in cursor:
-                reviews[int(rating[0])] = {
-                    int(rating[1]): {
-                        'userid': rating[0],
-                        'movieid': rating[1],
-                        'rating': float(rating[2])
-                    } 
+                reviews[int(rating[0])][int(rating[1])] = {
+                    'userid': rating[0],
+                    'movieid': rating[1],
+                    'rating': float(rating[2])
                 }
         return reviews
 
@@ -72,7 +74,6 @@ class DatabaseHelper(object):
         for _id, movies in result.items():
             for mid in movies:
                 recommends.append((_id, mid))
-        print(recommends)
         with self.conn.cursor() as cursor:
             rcmd_data_text = b','.join(cursor.mogrify(b'(%s,%s)', row) for row in recommends)
             cursor.execute(b'INSERT INTO ' + table_name + b' VALUES ' + rcmd_data_text)

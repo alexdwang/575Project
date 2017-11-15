@@ -10,71 +10,19 @@ from operator import itemgetter
 from datetime import datetime
 from collections import defaultdict, OrderedDict
 
-
 import pearson
 import euclidean
-
-def load_reviews(path, **kwargs):
-    '''''
-    load reviews from file
-    '''
-    lines = open(path,'r',encoding='ISO-8859-1').readlines()
-    for line in lines:
-        row = OrderedDict()
-        mydata = line.split(sep="::")
-        row['userid'] = int(mydata[0])
-        row['movieid'] = int(mydata[1])
-        row['rating'] = int(mydata[2])
-        row['timestamp'] = mydata[3]
-        # print(row['movieid'])
-        # print(row['userid'])
-        # print(row['rating'])
-        # print (row)
-        yield row
-
-
-def relative_path(path):
-    '''''
-    辅助数据导入
-    '''
-    dirname = os.path.dirname(os.path.realpath('__file__'))
-    path = os.path.join(dirname, path)
-    return  os.path.normpath(path)
-
-
-def load_movies(path, **kwargs):
-    '''''
-    读取电影信息
-    '''
-    lines = open(path,'r',encoding='ISO-8859-1').readlines()
-    for line in lines:
-        row = dict()
-        mydata = line.split(sep="::")
-        row['movieid'] = int(mydata[0])
-        row['title'] = mydata[1]
-        row['genre'] = mydata[2]
-        # print(row['movieid'])
-        # print(row['title'])
-        # print(row['genre'])
-        yield row
-
+from dbhelper import DatabaseHelper
 
 
 class MovieLens(object):
-    def __init__(self, udata, uitem):
-        self.udata = udata
-        self.uitem = uitem
+    def __init__(self):
         self.movies = OrderedDict()
         self.reviews = defaultdict(dict)
-        self.load_dataset()
 
-    def load_dataset(self):
-        # load dataset into memory
-        for movie in load_movies(self.uitem):
-            self.movies[movie['movieid']] = movie
-
-        for review in load_reviews(self.udata):
-            self.reviews[review['userid']][review['movieid']] = review
+        db = DatabaseHelper(password='asdfghjkl')
+        self.movies = db.get_all_movies()
+        self.reviews = db.get_all_reviews()
 
     def reviews_for_movie(self, movieid):
         for review in self.reviews.values():
@@ -91,13 +39,11 @@ class MovieLens(object):
 
     def top_rated(self, n=10):
         # 返回一个前n的top排行
-
         return heapq.nlargest(n, self.bayesian_average(), key=itemgetter(1))
 
 
     def bayesian_average(self, c=59, m=3):
         # 返回一个修正后的贝叶斯平均值
-
         for movieid in self.movies:
             reviews = list(r['rating'] for r in self.reviews_for_movie(movieid))
             average = ((c * m) + sum(reviews)) / float(c + len(reviews))
@@ -393,21 +339,19 @@ class Recommender(object):
         '''''
         加载用户和电影的索引作为一个NxM的数组，N是用户的数量，M是电影的数量；标记这个顺序寻找矩阵的价值
         '''
-
-        self.users = set([])
-        self.movies = set([])
-        for review in load_reviews(self.udata):
-            self.users.add(review['userid'])
-            self.movies.add(review['movieid'])
+        db = DatabaseHelper(password='asdfghjkl')
+        self.users = set(db.get_all_uids())
+        self.movies = set(db.get_all_mids)
 
         self.users = sorted(self.users)
         self.movies = sorted(self.movies)
 
         self.reviews = np.zeros(shape=(len(self.users), len(self.movies)))
-        for review in load_reviews(self.udata):
-            uid = self.users.index(review['userid'])
-            mid = self.movies.index(review['movieid'])
-            self.reviews[uid, mid] = review['rating']
+        _reviews = db.get_all_ratings_raw()
+        for review in _reviews:
+            uid = self.users.index(review[0])
+            mid = self.movies.index(review[1])
+            self.reviews[uid, mid] = review[2]
 
     def build(self, output=None):
         '''''
@@ -443,9 +387,8 @@ class Recommender(object):
         return heapq.nlargest(n, movies, key=itemgetter(1))
 
 if __name__ == '__main__':
-    data = relative_path('ratings.dat')
-    item = relative_path('movies.dat')
-    model = MovieLens(data, item)
+    model = MovieLens()
+    db = DatabaseHelper(password='asdfghjkl')
 
     # print("movies type: ", type(model.movies))
     # print("movies[movieid] type: ", type(model.movies[1]))
@@ -489,6 +432,7 @@ if __name__ == '__main__':
     # model.build('svd')
     # print(model.top_rated(1,12))
 
-    euclidean.getRecomDict_User(model)
+    result = euclidean.getRecomDict_User(model)
+    db.save_knn_euclidean_recommend_result(result, type='user')
     # euclidean.getRecomDict_Movie(model)
     # pearson.getRecomDict_User(model)
