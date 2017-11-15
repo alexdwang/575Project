@@ -52,3 +52,8 @@ CREATE TABLE recommend_by_movie_euclidean (
 	mid INT,
 	to_mid INT
 );
+
+CREATE TABLE svd_recommend (
+	uid INT REFERENCES users (id),
+	mid INT REFERENCES movies (id)
+);
