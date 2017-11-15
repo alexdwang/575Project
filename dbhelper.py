@@ -11,25 +11,25 @@ class DatabaseHelper(object):
     def __del__(self):
         self.conn.close()
 
-    def get_all_uids(self):
+    def get_all_users(self):
         uids = []
         with self.conn.cursor() as cursor:
-            cursor.execute('SELECT id FROM users')
-            uids = [x[0] for x in cursor]
+            cursor.execute('SELECT * FROM users')
+            uids = [[x[0], x[1], x[2]] for x in cursor]
         return uids
 
-    def get_all_mids(self):
+    def get_all_movies_svd(self):
         mids = []
         with self.conn.cursor() as cursor:
-            cursor.execute('SELECT id FROM movies')
-            mids = [x[0] for x in cursor]
+            cursor.execute('SELECT * FROM movies')
+            mids = [[x[0], x[1], x[2]] for x in cursor]
         return mids
 
     def get_all_ratings_raw(self):
         ratings = []
         with self.conn.cursor() as cursor:
             cursor.execute('SELECT * FROM ratings')
-            ratings = [(x[0], x[1], float(x[2])) for x in cursor]
+            ratings = [[x[0], x[1], float(x[2])] for x in cursor]
         return ratings
 
     def get_all_movies(self):

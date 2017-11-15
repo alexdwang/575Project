@@ -5,3 +5,5 @@ CSE575 machine learning project
 
 - psycopg2
 - numpy
+- scipy
+- pandas
