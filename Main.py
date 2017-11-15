@@ -298,141 +298,32 @@ def factor2(R, P=None, Q=None, K=2, steps=5000, alpha=0.0002, beta=0.02):
             break
     return P, Q.T
 
-class Recommender(object):
-    @classmethod
-    def load(klass, pickle_path):
-        '''''
-        接受磁盘上包含pickle序列化后的文件路径为参数，并用pickle模块载入文件。
-        由于pickle模块在序列化是会保存导出时对象的所有属性和方法，因此反序列
-        化出来的对象有可能已经和当前最新代码中的类不同。
-        '''
-        with open(pickle_path, 'rb') as pkl:
-            return pickle.load(pkl)
 
-    def __init__(self, udata):
-        self.udata = udata
-        self.users = None
-        self.movies = None
-        self.reviews = None
+def update_u2m_euclidean(db, model):
+    result = euclidean.getRecomDict_User(model)
+    db.save_knn_euclidean_recommend_result(result, type='user')
 
-        # 描述性工程
-        self.build_start = None
-        self.build_finish = None
-        self.description = None
 
-        self.model = None
-        self.features = 2
-        self.steps = 5000
-        self.alpha = 0.0002
-        self.beta = 0.02
+def update_m2m_euclidean(db, model):
+    result = euclidean.getRecomDict_Movie(model)
+    db.save_knn_euclidean_recommend_result(result, type='movie')
 
-        self.load_dataset()
 
-    def dump(self, pickle_path):
-        '''''
-        序列化方法、属性和数据到硬盘，以便在未来导入
-        '''
-        with open(pickle_path, 'wb') as pkl:
-            pickle.dump(self, pkl)
+def update_u2m_pearson(db, model):
+    result = pearson.getRecomDict_User(model)
+    db.save_knn_pearson_recommend_result(result, type='user')
 
-    def load_dataset(self):
-        '''''
-        加载用户和电影的索引作为一个NxM的数组，N是用户的数量，M是电影的数量；标记这个顺序寻找矩阵的价值
-        '''
-        db = DatabaseHelper(password='asdfghjkl')
-        self.users = set(db.get_all_uids())
-        self.movies = set(db.get_all_mids)
 
-        self.users = sorted(self.users)
-        self.movies = sorted(self.movies)
+def update_m2m_pearson(db, model):
+    result = pearson.getRecomDict_Movie(model)
+    db.save_knn_pearson_recommend_result(result, type='movie')
 
-        self.reviews = np.zeros(shape=(len(self.users), len(self.movies)))
-        _reviews = db.get_all_ratings_raw()
-        for review in _reviews:
-            uid = self.users.index(review[0])
-            mid = self.movies.index(review[1])
-            self.reviews[uid, mid] = review[2]
-
-    def build(self, output=None):
-        '''''
-        训练模型
-        '''
-        options = {
-            'K': self.features,
-            'steps': self.steps,
-            'alpha': self.alpha,
-            'beta': self.beta
-        }
-
-        self.build_start = time.time()
-        nnmf = factor2
-        self.P, self.Q = nnmf(self.reviews, **options)
-        self.model = np.dot(self.P, self.Q.T)
-        self.build_finish = time.time()
-
-        if output:
-            self.dump(output)
-
-    # 利用模型来访问预测的评分
-    def predict_ranking(self, user, movie):
-        uidx = self.users.index(user)
-        midx = self.movies.index(movie)
-        if self.reviews[uidx, midx] > 0:
-            return None
-        return self.model[uidx, midx]
-
-    # 预测电影的排名
-    def top_rated(self, user, n=12):
-        movies = [(mid, self.predict_ranking(user, mid)) for mid in self.movies]
-        return heapq.nlargest(n, movies, key=itemgetter(1))
 
 if __name__ == '__main__':
     model = MovieLens()
     db = DatabaseHelper(password='asdfghjkl')
 
-    # print("movies type: ", type(model.movies))
-    # print("movies[movieid] type: ", type(model.movies[1]))
-    # print(model.movies[1].keys())
-    # print()
-    # print("reviews type: ", type(model.reviews))
-    # print("reviews[userid] type: ",type(model.reviews[1]))
-    # print("reviews[userid][movieid] type: ", type(model.reviews[1][1]))
-    # print(model.reviews[1][1].keys())
-
-    # print(model.movies[1]["movieid"])
-    # for key in model.reviews[len(model.reviews) - 1].keys():
-    #     print(model.reviews[len(model.reviews) - 1][key])
-    # for mid, avg, num in model.top_rated(10):
-    #     title = model.movies[mid]['title']
-    #     print ("[%0.3f average rating (%i reviews)] %s" % (avg, num, title))
-
-    # print(model.euclidean_distance(631, 532))  # A,B
-    # print(model.pearson_correlation(232, 111))
-    # for item in model.similar_critics(232, 'pearson', n=10):
-    #     print("%4i: %0.3f" % item)
-    # print(model.predict_ranking(422, 50, 'euclidean'))
-    # print(model.predict_ranking(422, 50, 'pearson') )
-    #
-
-        # print('%0.3f: %s' % (rating, model.movies[mid]['movieid']))
-    #
-    # dict = pearson.getRecomDict_Movie(model)
-    # for movie, similarity in model.similar_items(631, 'pearson',10):
-    #     print('%0.3f : %s' % (similarity, model.movies[movie]['title']))
-
-    # lastmid = model.movies[len(model.movies) - 1]["movieid"]
-    # lastuid = 942
-    # for user in range(1,lastuid + 1):
-    #     for movie in range(1,lastmid + 1):
-    #         print(model.predict_items_recommendation(user, movie, 'pearson'))
-    #
-    # model = Recommender(data)
-    # model.load_dataset()
-    # print ("building")
-    # model.build('svd')
-    # print(model.top_rated(1,12))
-
-    result = euclidean.getRecomDict_User(model)
-    db.save_knn_euclidean_recommend_result(result, type='user')
-    # euclidean.getRecomDict_Movie(model)
-    # pearson.getRecomDict_User(model)
+    update_u2m_euclidean(db, model)
+    update_m2m_euclidean(db, model)
+    update_u2m_pearson(db, model)
+    update_m2m_pearson(db, model)
