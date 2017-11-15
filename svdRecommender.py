@@ -82,5 +82,6 @@ if __name__ == '__main__':
     users = db.get_all_users()
     print("numOfUsers: {}, numOfMovies: {}, numOfRatings: {}".format(len(users), len(movies), len(ratings)))
     print("start svd: {}".format(time.ctime()))
-    runSVDPrediction("svdOutput.csv", ratings, movies, users)
+    result = runSVDPrediction("svdOutput.csv", ratings, movies, users)
     print("end svd: {}".format(time.ctime()))
+    db.save_svd_recommend_result(result)

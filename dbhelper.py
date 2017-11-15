@@ -79,6 +79,17 @@ class DatabaseHelper(object):
             cursor.execute(b'INSERT INTO ' + table_name + b' VALUES ' + rcmd_data_text)
             self.conn.commit()
 
+    def save_svd_recommend_result(self, result):
+        recommends = []
+        for id, movies in result.items():
+            for mid in movies:
+                recommends.append((id, mid))
+
+        with self.conn.cursor() as cursor:
+            rcmd_data_text = b','.join(cursor.mogrify(b'(%s,%s)', row) for row in recommends)
+            cursor.execute(b'INSERT INTO svd_recommend VALUES ' + rcmd_data_text)
+            self.conn.commit()
+
 
 def test():
     db = DatabaseHelper(password='asdfghjkl')
