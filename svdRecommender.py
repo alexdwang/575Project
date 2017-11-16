@@ -62,7 +62,7 @@ def runSVDPrediction(outputFilePath, ratings, movies, users):
         userId = int(user[0])
         userRatedFullTable, recommendations = svdRecommender(svdPredictDataFrame, moviesDataFrame, ratings, userId, 10)
         movieIds = recommendations.ix[:, 0]
-        recommendedResult[userId] = numpy.array(movieIds)
+        recommendedResult[userId] = numpy.array(movieIds).tolist()
         writer = csv.writer(open(outputFilePath, 'a'))
         writer.writerow([userId, numpy.array(movieIds)])
         count += 1
@@ -78,9 +78,9 @@ if __name__ == '__main__':
     db = DatabaseHelper(password='asdfghjkl')
     ratings = db.get_all_ratings_raw()
     movies = db.get_all_movies_svd()
-    print(movies[0])
     users = db.get_all_users()
     print("numOfUsers: {}, numOfMovies: {}, numOfRatings: {}".format(len(users), len(movies), len(ratings)))
     print("start svd: {}".format(time.ctime()))
-    runSVDPrediction("svdOutput.csv", ratings, movies, users)
+    result = runSVDPrediction("svdOutput.csv", ratings, movies, users)
     print("end svd: {}".format(time.ctime()))
+    db.save_svd_recommend_result(result)

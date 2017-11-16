@@ -13,7 +13,6 @@ def getRecomDict_User(model):
         for mid in model.predict_all_rankings(userid, 'pearson', 20):
             mymovies.append(model.movies[mid[0]]['movieid'])
         #     print(mid)
-        print("userid = ", userid)
         # print(mymovies)
         recommendtouser_dict[userid] = mymovies
     return recommendtouser_dict
