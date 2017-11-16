@@ -29,7 +29,7 @@ $("#search").click(function (event) {
   $.ajax({
       url:"api/getInfo",
       type: "POST",
-      data: params,
+      data: JSON.stringify(params),
       processData: false,
       contentType: 'application/json',
       success: function(respMsg){
