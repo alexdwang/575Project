@@ -24,14 +24,16 @@ $("#search").click(function (event) {
 
   movieform = $("#movieform")[0];
   $("#olmovielist").empty();
-  var params = {"algorithm": $("#algorithm").val(),"userid": $("#userid").val()};
+  userid = $("#userid").val();
+  var params = {"algorithm": $('input[name=algorithm]:checked', '#movieform').val(),"userid": userid};
   $.ajax({
       url:"api/getInfo",
       type: "POST",
       data: params,
-      dataType : "json",
+      processData: false,
+      contentType: 'application/json',
       success: function(respMsg){
-        favorites = respMsg;
+        favorites = respMsg[userid];
         for (var i = 0; i < favorites.length; i++) {
           var movie = favorites[i]["name"] + " " + favorites[i]["genre"];
           $("#olmovielist").append("<li class='list-group-item'>" + movie +"</li>");
@@ -46,14 +48,16 @@ $("#search").click(function (event) {
 $("#recommend").click(function (event) {
   $("#olmovielist").empty();
   movieform = $("#movieform")[0];
-  var params = {"algorithm": $("#algorithm").val(),"movieid": $("#movieid").val()};
+  movieid = $("#movieid").val();
+  var params = {"algorithm": $('input[name=algorithm]:checked', '#movieform').val(), "movieid": movieid};
   $.ajax({
       url:"api/getInfo",
       type: "POST",
-      data: params,
-      dataType : "json",
+      data: JSON.stringify(params),
+      processData: false,
+      contentType: 'application/json',
       success: function(respMsg){
-        recommend = respMsg;
+        recommend = respMsg[movieid];
         for (var i = 0; i < recommend.length; i++) {
           var movie = recommend[i]["name"] + " " + recommend[i]["genre"];
           $("#olmovielist").append("<li class='list-group-item'>" + movie +"</li>");
