@@ -7,6 +7,10 @@ class DatabaseHelper(object):
 
     def __init__(self, host='localhost', port=5432, user='projectdb', password='', db='projectdb'):
         self.conn = psycopg2.connect(host=host, port=str(port), user=user, password=password, dbname=db)
+        self.categories = ['Documentary', 'Comedy', 'Adventure', 'Musical', 'Crime', 'War',
+                           'Fantasy', 'Childrens', 'Western', 'FilmNoir', 'Horror', 'SciFi',
+                           'Animation', 'Action', 'Mystery', 'Thriller', 'Drama', 'Romance'
+                          ]
 
     def __del__(self):
         self.conn.close()
@@ -90,11 +94,70 @@ class DatabaseHelper(object):
             cursor.execute(b'INSERT INTO svd_recommend VALUES ' + rcmd_data_text)
             self.conn.commit()
 
+    def get_recommend_by_user_euclidean(self, uid):
+        recommends = []
+        with self.conn.cursor() as cursor:
+            cursor.execute('SELECT name,documentary,comedy,adventure,musical,crime,war,fantasy,childrens,western,filmnoir,horror,scifi,animation,action,mystery,thriller,drama,romance FROM movies,recommend_by_user_euclidean WHERE recommend_by_user_euclidean.uid=' + str(uid) + ' AND movies.id=recommend_by_user_euclidean.mid')
+            for row in cursor:
+                genres = []
+                for i in range(1, len(row)):
+                    if row[i]:
+                        genres.append(self.categories[i-1])
+                recommends.append({'name': row[0], 'genre': ', '.join(genres)})
+        return recommends
+
+    def get_recommend_by_user_pearson(self, uid):
+        recommends = []
+        with self.conn.cursor() as cursor:
+            cursor.execute('SELECT name,documentary,comedy,adventure,musical,crime,war,fantasy,childrens,western,filmnoir,horror,scifi,animation,action,mystery,thriller,drama,romance FROM movies,recommend_by_user_pearson WHERE recommend_by_user_pearson.uid=' + str(uid) + ' AND movies.id=recommend_by_user_pearson.mid')
+            for row in cursor:
+                genres = []
+                for i in range(1, len(row)):
+                    if row[i]:
+                        genres.append(self.categories[i-1])
+                recommends.append({'name': row[0], 'genre': ', '.join(genres)})
+        return recommends
+
+    def get_recommend_by_user_svd(self, uid):
+        recommends = []
+        with self.conn.cursor() as cursor:
+            cursor.execute('SELECT name,documentary,comedy,adventure,musical,crime,war,fantasy,childrens,western,filmnoir,horror,scifi,animation,action,mystery,thriller,drama,romance FROM movies,svd_recommend WHERE svd_recommend.uid=' + str(uid) + ' AND movies.id=svd_recommend.mid')
+            for row in cursor:
+                genres = []
+                for i in range(1, len(row)):
+                    if row[i]:
+                        genres.append(self.categories[i-1])
+                recommends.append({'name': row[0], 'genre': ', '.join(genres)})
+        return recommends
+
+    def get_recommend_by_movie_euclidean(self, mid):
+        recommends = []
+        with self.conn.cursor() as cursor:
+            cursor.execute('SELECT name,documentary,comedy,adventure,musical,crime,war,fantasy,childrens,western,filmnoir,horror,scifi,animation,action,mystery,thriller,drama,romance FROM movies,recommend_by_movie_euclidean WHERE recommend_by_movie_euclidean.mid=' + str(mid) + ' AND movies.id=recommend_by_movie_euclidean.to_mid')
+            for row in cursor:
+                genres = []
+                for i in range(1, len(row)):
+                    if row[i]:
+                        genres.append(self.categories[i-1])
+                recommends.append({'name': row[0], 'genres': ', '.join(genres)})
+        return recommends
+
+    def get_recommend_by_movie_pearson(self, mid):
+        recommends = []
+        with self.conn.cursor() as cursor:
+            cursor.execute('SELECT name,documentary,comedy,adventure,musical,crime,war,fantasy,childrens,western,filmnoir,horror,scifi,animation,action,mystery,thriller,drama,romance FROM movies,recommend_by_movie_pearson WHERE recommend_by_movie_pearson.mid=' + str(mid) + ' AND movies.id=recommend_by_movie_pearson.to_mid')
+            for row in cursor:
+                genres = []
+                for i in range(1, len(row)):
+                    if row[i]:
+                        genres.append(self.categories[i-1])
+                recommends.append({'name': row[0], 'genres': ', '.join(genres)})
+        return recommends
+
 
 def test():
     db = DatabaseHelper(password='asdfghjkl')
-    result = {1: [989, 1830, 3172, 3233, 3382, 3607, 3656, 3881, 787, 3245, 53, 2503, 2905, 3888, 3517, 527, 2019, 318, 1178, 922], 2: [787, 989, 1830, 2480, 3172, 3233, 3280, 3382, 3607, 3656, 3881, 3245, 53, 3888, 2503, 2905, 318, 2019, 1148, 922], 3: [787, 989, 2480, 3172, 3233, 3280, 3382, 3607, 3656, 3881, 3245, 53, 3888, 2503, 2905, 2019, 670, 318, 922, 50], 4: [787, 989, 2480, 3172, 3233, 3607, 3656, 3881, 3245, 2503, 2905, 3888, 2019, 318, 53, 1148, 527, 50, 2444, 922], 5: [787, 989, 1830, 3172, 3233, 3280, 3382, 3607, 3656, 3881, 53, 3245, 2503, 3888, 2905, 2309, 2019, 578, 2444, 922], 6: [787, 989, 3172, 3233, 3382, 3607, 3656, 3881, 3245, 53, 2503, 2905, 598, 3888, 318, 2019, 745, 1148, 2309, 1178], 7: [787, 989, 1830, 3172, 3233, 3607, 3656, 3881, 3888, 3245, 53, 2503, 2905, 2019, 318, 3517, 745, 50, 527, 578], 8: [787, 989, 1830, 3172, 3233, 3382, 3607, 3656, 3881, 53, 3888, 3245, 2503, 1787, 2905, 318, 2019, 578, 670, 2444], 9: [787, 989, 1830, 3172, 3233, 3280, 3382, 3607, 3656, 3881, 53, 3245, 2503, 3888, 2905, 2019, 318, 2309, 527, 670], 10: [989, 1830, 3172, 3233, 3280, 3382, 3607, 3656, 3881, 787, 3245, 53, 2503, 3888, 2905, 318, 3232, 2019, 1148, 50]}
-    db.save_knn_euclidean_recommend_result(result, type='user')
+    print(db.get_recommend_by_user_pearson(1))
 
 
 if __name__ == '__main__':
