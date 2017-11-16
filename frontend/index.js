@@ -34,6 +34,7 @@ $("#search").click(function (event) {
       contentType: 'application/json',
       success: function(respMsg){
         favorites = respMsg[userid];
+
         for (var i = 0; i < favorites.length; i++) {
           var movie = favorites[i]["name"] + " " + favorites[i]["genre"];
           $("#olmovielist").append("<li class='list-group-item'>" + movie +"</li>");
@@ -49,7 +50,13 @@ $("#recommend").click(function (event) {
   $("#olmovielist").empty();
   movieform = $("#movieform")[0];
   movieid = $("#movieid").val();
-  var params = {"algorithm": $('input[name=algorithm]:checked', '#movieform').val(), "movieid": movieid};
+  var algo = $('input[name=algorithm]:checked', '#movieform').val();
+  if (algo === "svd") {
+    alert("You can't use SVD to recommend Movie");
+    movieform.reset();
+    return;
+  }
+  var params = {"algorithm": algo, "movieid": movieid};
   $.ajax({
       url:"api/getInfo",
       type: "POST",
