@@ -21,11 +21,12 @@ var movieform = []
 // });
 
 $("#search").click(function (event) {
-  console.log("search");
+
   movieform = $("#movieform")[0];
   $("#olmovielist").empty();
   var params = {"algorithm": $("#algorithm").val(),"userid": $("#userid").val()};
   $.ajax({
+      url:"api/getInfo",
       type: "POST",
       data: params,
       dataType : "json",
@@ -47,6 +48,7 @@ $("#recommend").click(function (event) {
   movieform = $("#movieform")[0];
   var params = {"algorithm": $("#algorithm").val(),"movieid": $("#movieid").val()};
   $.ajax({
+      url:"api/getInfo",
       type: "POST",
       data: params,
       dataType : "json",
