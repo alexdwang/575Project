@@ -68,9 +68,6 @@ def runSVDPrediction(outputFilePath, ratings, movies, users):
         count += 1
         if count % 10 == 0:
             print("count: {0}".format(count))
-            # writer = csv.writer(open(outputFilePath, "a"))
-            # for key, val in recommendedResult.items():
-            #     writer.writerow([key, val])
     return recommendedResult
 
 

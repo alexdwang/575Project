@@ -12,13 +12,7 @@ def getRecomDict_User(model):
         mymovies = []
         for mid in model.predict_all_rankings(userid, n = 20):
             mymovies.append(model.movies[mid[0]]['movieid'])
-        #     print(mid)
-        # print("userid = ", userid)
-        # print(mymovies)
         recommendtouser_dict[userid] = mymovies
-    # print("recommend_to_user_dict type: ",type(recommendtouser_dict))
-    # print("recommend_to_user_dict[userid] type: ", type(recommendtouser_dict[1]))
-    # print("content in recommend_to_user_dict[userid]:", recommendtouser_dict[1])
     return recommendtouser_dict
 
 #  A method to get the 10 most similar movies for given movies
@@ -31,7 +25,5 @@ def getRecomDict_Movie(model):
         mymovies = []
         for movie in model.similar_items(movieid, n = 10):
             mymovies.append(model.movies[movie[0]]['movieid'])
-        # print("movie = ", movieid)
-        # print(mymovies)
         recommendtomovie_dict[movieid] = mymovies
     return recommendtomovie_dict
