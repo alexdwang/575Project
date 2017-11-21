@@ -2,24 +2,6 @@ var favorites = [];
 var recommend = [];
 var movieform = []
 
-// $(document).ready(function() {
-//   movieform = $("#movieform")[0];
-//   $("#recommend").click(function () {
-//     $("#olmovielist").empty();
-//     console.log(recommend.length);
-//     for (var i = 0; i < recommend.length; i++) {
-//       console.log(recommend[i]["name"] + " " + recommend[i]["genre"]);
-//       $("#olmovielist").append("<li class='list-group-item'>" + recommend[i]["name"] + " " + recommend[i]["genre"] +"</li>");
-//
-//     }
-//     movieform.reset();
-//     event.preventDefault();
-//     return false;
-//   });
-// $(document).ready(function() {
-//   movieform = $("#movieform")[0];
-// });
-
 $("#search").click(function (event) {
 
   movieform = $("#movieform")[0];
@@ -66,7 +48,7 @@ $("#recommend").click(function (event) {
       success: function(respMsg){
         recommend = respMsg[movieid];
         for (var i = 0; i < recommend.length; i++) {
-          var movie = recommend[i]["name"] + " " + recommend[i]["genre"];
+          var movie = recommend[i]["name"] + " " + recommend[i]["genres"];
           $("#olmovielist").append("<li class='list-group-item'>" + movie +"</li>");
         }
       }
