@@ -24,6 +24,7 @@ class MovieLens(object):
         db = DatabaseHelper(password='asdfghjkl')
         self.movies = db.get_all_movies()
         self.reviews = db.get_all_reviews()
+        self.num_of_movie = 3952
 
     def reviews_for_movie(self, movieid):
         for review in self.reviews.values():
@@ -38,20 +39,20 @@ class MovieLens(object):
             yield (movieid, average, len(reviews))
 
 
+    # find top n recommendations and return
     def top_rated(self, n=10):
-        # find top n recommendations and return
         return heapq.nlargest(n, self.bayesian_average(), key=itemgetter(1))
 
 
+    # calculate Bayesian average and return
     def bayesian_average(self, c=59, m=3):
-        # calculate Bayesian average and return
         for movieid in self.movies:
             reviews = list(r['rating'] for r in self.reviews_for_movie(movieid))
             average = ((c * m) + sum(reviews)) / float(c + len(reviews))
             yield (movieid, average, len(reviews))
 
+    # find shared preferences between userA and userB
     def share_preferences(self, criticA, criticB):
-        # find shared preferences between userA and userB
         if criticA not in self.reviews:
             raise KeyError("Couldn't find critic '%s' in data " % criticA)
         if criticB not in self.reviews:
@@ -69,8 +70,8 @@ class MovieLens(object):
         return reviews
 
 
+    # use shared preferences to calculate euclidean distance between userA and userB (or movieA and movieB)
     def euclidean_distance(self, criticA, criticB, prefs='users'):
-        # use shared preferences to calculate euclidean distance between userA and userB (or movieA and movieB)
         if prefs == 'users':
             preferences = self.share_preferences(criticA, criticB)
         elif prefs == 'movies':
@@ -88,8 +89,8 @@ class MovieLens(object):
         return 1 / (1 + math.sqrt(sum_of_squares))
 
 
+    # use shared preferences to calculate pearson correlation between userA and userB (or movieA and movieB)
     def pearson_correlation(self, criticA, criticB, prefs='users'):
-        # use shared preferences to calculate pearson correlation between userA and userB (or movieA and movieB)
         if prefs == 'users':
             preferences = self.share_preferences(criticA, criticB)
         elif prefs == 'movies':
@@ -113,8 +114,8 @@ class MovieLens(object):
         if denominator == 0: return 0
         return abs(numerator / denominator)
 
+    # find similar critics for a specific user
     def similar_critics(self, user, metric='euclidean', n=None):
-        # find similar critics for a specific user
 
         metrics = {
             'euclidean': self.euclidean_distance,
@@ -138,8 +139,8 @@ class MovieLens(object):
             return heapq.nlargest(n, critics.items(), key=itemgetter(1))
         return critics
 
+    # predict ratings that a specific user will give to a movie using similarity as weight and perform weighted KNN algorithm
     def predict_ranking(self, user, movie, metric='euclidean', critics=None):
-        # predict ratings that a specific user will give to a movie using similarity as weight and perform weighted KNN algorithm
         critics = critics or self.similar_critics(user, metric=metric)
         total = 0.0
         simsum = 0.0
@@ -152,8 +153,8 @@ class MovieLens(object):
         if simsum == 0.0: return 0.0
         return total / simsum
 
+    # predict ratings for all movies and return top n
     def predict_all_rankings(self, user, metric='euclidean', n=None):
-        # predict ratings for all movies and return top n
 
         critics = self.similar_critics(user, metric=metric)
         movies = {
@@ -166,8 +167,8 @@ class MovieLens(object):
         return movies
 
 
+    # find shared critics who watched both movies
     def shared_critics(self, movieA, movieB):
-        # find shared critics who watched both movies
 
         if movieA not in self.movies:
             raise KeyError("Couldn't find movie '%s' in data" % movieA)
@@ -225,6 +226,72 @@ class MovieLens(object):
         if simsum == 0.0: return 0.0
         return total / simsum
 
+def load_test_matrix(path):
+    testMatrix = np.zeros((7000, model.num_of_movie))
+    lines = open(path, 'r', encoding='ISO-8859-1').readlines()
+    for line in lines:
+        mydata = line.split(sep="::")
+        testMatrix[int(mydata[0]) - 1][int(mydata[1]) - 1] = int(mydata[2])
+    return testMatrix
+
+
+def getEMatrix(model, metric='euclidean'):
+    EMatrix = np.zeros((7000, model.num_of_movie))
+    count = 0
+    for userid in model.reviews.keys():
+        movies = model.predict_all_rankings(userid, metric=metric)
+        for mid in movies.keys():
+            EMatrix[int(userid) - 1][mid - 1] = movies[mid]
+            # print(mid)
+            # if mid in model.reviews:
+            #     EMatrix[int(userid) - 1][int(mid) - 1] = model.predict_items_recommendation(userid, mid, metric)
+
+        count += 1
+        if count%100 == 1:
+            print(count)
+        # print(userid)
+    return EMatrix
+
+def saveMatrix(path, matrix):
+    file = open(path,'a')
+    writer = csv.writer(file)
+    writer.writerows(matrix)
+    file.close()
+
+def rmse(prediction, ground_truth):
+    prediction = prediction[ground_truth.nonzero()].flatten()
+    ground_truth = ground_truth[ground_truth.nonzero()].flatten()
+    return sqrt(mean_squared_error(prediction, ground_truth))
+
+def rootMeanSquareError(originalMatrix, predictMatrix):
+    meanError = mean_squared_error(originalMatrix, predictMatrix)
+    # print("meanError: {}".format(meanError))
+    squaredError = sqrt(meanError)
+    return squaredError
+
+# calculate rmse for euclidean and pearson
+def calculate_rmse(model):
+    testMatrix = load_test_matrix("testdata_matrix_path")
+	userPrediction_p = getEMatrix(model, 'pearson')
+	#saveMatrix(pearson_path, userPrediction_p)
+	
+	userPrediction_e = getEMatrix(model, 'euclidean')
+	#saveMatrix(euclidean_path, userPrediction_e)
+	
+	print('pearson User-based CF RMSE: ' + str(rmse(userPrediction_p, testMatrix)))
+    print('euclidean User-based CF RMSE: ' + str(rmse(userPrediction_e, testMatrix)))
+	
+def calculate_root_square_error(model):
+    testMatrix = load_test_matrix("whole_data_matrix_path")
+	userPrediction_p = getEMatrix(model, 'pearson')
+	#saveMatrix(pearson_path, userPrediction_p)
+	
+	userPrediction_e = getEMatrix(model, 'euclidean')
+	#saveMatrix(euclidean_path, userPrediction_e)
+	
+	print('pearson User-based CF RMSE: ' + str(rootMeanSquareError(userPrediction_p, testMatrix)))
+    print('euclidean User-based CF RMSE: ' + str(rootMeanSquareError(userPrediction_e, testMatrix)))
+	
 def update_u2m_euclidean(model):
     result = euclidean.getRecomDict_User(model)
     db = DatabaseHelper(password='asdfghjkl')
