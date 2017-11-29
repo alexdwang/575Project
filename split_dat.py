@@ -11,7 +11,7 @@ def relative_path(path):
 def split_dat_matrix():
     split_rate = 0.8
     path = relative_path('ratings.dat')
-    lines = open(path, 'r', encoding='ISO-8859-1').readlines()
+    lines = open(path, 'r', encoding='UTF-8').readlines()
     array = []
     for line in lines:
         array.append(line)
@@ -25,13 +25,13 @@ def split_dat_matrix():
     f = open("test.dat", "wb")
     start = 2
     for row in test_array:
-        text1 = row.encode("ISO-8859-1")
+        text1 = row.encode("UTF-8")
         f.write(text1)
     f.close()
     f = open("train.dat", "wb")
     start = 2
     for row in array:
-        text1 = row.encode("ISO-8859-1")
+        text1 = row.encode("UTF-8")
         f.write(text1)
     f.close()
     return

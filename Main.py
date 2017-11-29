@@ -163,7 +163,7 @@ class MovieLens(object):
 
 def load_test_matrix(path):
 	testMatrix = np.zeros((7000, model.num_of_movie))
-	lines = open(path, 'r', encoding='ISO-8859-1').readlines()
+	lines = open(path, 'r', encoding='UTF-8').readlines()
 	for line in lines:
 		mydata = line.split(sep="::")
 		testMatrix[int(mydata[0]) - 1][int(mydata[1]) - 1] = int(mydata[2])
