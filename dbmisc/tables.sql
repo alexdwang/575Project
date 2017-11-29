@@ -6,7 +6,7 @@ CREATE TABLE users (
 
 CREATE TABLE movies (
     id INT PRIMARY KEY,
-    name VARCHAR(100),
+    name VARCHAR(200),
     Documentary BOOL,
 	Comedy BOOL,
 	Adventure BOOL,
