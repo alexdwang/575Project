@@ -24,7 +24,7 @@ class MovieLens(object):
 		db = DatabaseHelper(password='asdfghjkl')
 		self.movies = db.get_all_movies()
 		self.reviews = db.get_all_reviews()
-		self.num_of_movie = 3952
+		self.num_of_movie = 65133
 
 	# use shared preferences to calculate euclidean distance between userA and userB (or movieA and movieB)
 	def euclidean_distance(self, criticA, criticB, prefs='users'):
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 	calc_rmse_eu = multiprocessing.Process(target=calculate_rmse_euclidean, args=(model,))
 	calc_rmse_eu.start()
 
-	calc_rmse_pr = multiprocessing.Process(target=calculate_pearson, args=(model,))
+	calc_rmse_pr = multiprocessing.Process(target=calculate_rmse_pearson, args=(model,))
 	calc_rmse_pr.start()
 
 	calc_rse = multiprocessing.Process(target=calculate_root_square_error, args=(model,))
