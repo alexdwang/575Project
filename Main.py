@@ -24,7 +24,7 @@ class MovieLens(object):
 		db = DatabaseHelper(password='asdfghjkl')
 		self.movies = db.get_all_movies()
 		self.reviews = db.get_all_reviews()
-		self.num_of_movie = 65133
+		self.num_of_movie = 3952
 
 	# use shared preferences to calculate euclidean distance between userA and userB (or movieA and movieB)
 	def euclidean_distance(self, criticA, criticB, prefs='users'):
@@ -162,16 +162,16 @@ class MovieLens(object):
 		return movies
 
 def load_test_matrix(path):
-	testMatrix = np.zeros((7000, model.num_of_movie))
+	testMatrix = np.zeros((6040, model.num_of_movie))
 	lines = open(path, 'r', encoding='UTF-8').readlines()
 	for line in lines:
 		mydata = line.split(sep="::")
-		testMatrix[int(mydata[0]) - 1][int(mydata[1]) - 1] = int(mydata[2])
+		testMatrix[int(mydata[0]) - 1][int(mydata[1]) - 1] = float(mydata[2])
 	return testMatrix
 
 
 def getEMatrix(model, metric='euclidean'):
-	EMatrix = np.zeros((7000, model.num_of_movie))
+	EMatrix = np.zeros((6040, model.num_of_movie))
 	count = 0
 	for userid in model.reviews.keys():
 		movies = model.predict_all_rankings(userid, metric=metric)
