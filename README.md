@@ -43,7 +43,9 @@ The `knn.py` script will calculate all the recommendation result using kNN algor
 
 The `svdRecommender.py` script will calculate all the recommendation result using SVD algorithms and store them into database. It will also evaluate the prediction result by utilizing RMSE method.
 
-## Seeing the Recommendation Result
+The scripts will run about 9 threads concurrently, and finish training in about 8 hours.
+
+## Check out the Recommendation Result
 
 You can check out all the recommendation result by running raw query in database, or using our simple web applicaiton. You will also need to specify correct database configuration in `api.py`.
 
