@@ -1,12 +1,10 @@
-#encoding:utf-8
-
 import os
 import multiprocessing
 import heapq
 import math
 import numpy as np
+import sklearn.metrics
 import time
-import pickle
 from operator import itemgetter
 from datetime import datetime
 from collections import defaultdict, OrderedDict
@@ -24,7 +22,9 @@ class MovieLens(object):
 		db = DatabaseHelper(password='asdfghjkl')
 		self.movies = db.get_all_movies()
 		self.reviews = db.get_all_reviews()
+		# Change this to the number of movies in dataset
 		self.num_of_movie = 3952
+
 
 	# use shared preferences to calculate euclidean distance between userA and userB (or movieA and movieB)
 	def euclidean_distance(self, criticA, criticB, prefs='users'):
@@ -70,6 +70,7 @@ class MovieLens(object):
 		if denominator == 0: return 0
 		return abs(numerator / denominator)
 
+
 	# find shared preferences between userA and userB
 	def shared_movies(self, criticA, criticB):
 		if criticA not in self.reviews:
@@ -91,7 +92,6 @@ class MovieLens(object):
 
 	# find shared critics who watched both movieA and movieB
 	def shared_users(self, movieA, movieB):
-
 		if movieA not in self.movies:
 			raise KeyError("Couldn't find movie '%s' in data" % movieA)
 		if movieB not in self.movies:
@@ -110,6 +110,30 @@ class MovieLens(object):
 			)
 
 		return reviews
+
+	# find similar movies for a given movie
+	def similar_items(self, movie, metric='euclidean', n=None):
+		metrics = {
+			'euclidean': self.euclidean_distance,
+			'pearson': self.pearson_correlation,
+		}
+
+		distance = metrics.get(metric, None)
+		if movie not in self.reviews:
+			raise KeyError("Unknown movie, '%s'." % movie)
+		if not distance or not callable(distance):
+			raise KeyError("Unknown or unprogrammed distance metric '%s'." % metric)
+
+		items = {}
+		for item in self.movies:
+			if item == movie:
+				continue
+
+			items[item] = distance(item, movie, prefs='movies')
+
+		if n:
+			return heapq.nlargest(n, items.items(), key=itemgetter(1))
+		return items
 
 	# find similar critics for a specific user
 	def similar_users(self, user, metric='euclidean', n=None):
@@ -161,6 +185,7 @@ class MovieLens(object):
 			return heapq.nlargest(n, movies.items(), key=itemgetter(1))
 		return movies
 
+
 def load_test_matrix(path):
 	testMatrix = np.zeros((6040, model.num_of_movie))
 	lines = open(path, 'r', encoding='UTF-8').readlines()
@@ -180,8 +205,8 @@ def getEMatrix(model, metric='euclidean'):
 		count += 1
 		if count%100 == 1:
 			print(count)
-		# print(userid)
 	return EMatrix
+
 
 def saveMatrix(path, matrix):
 	file = open(path,'a')
@@ -189,41 +214,40 @@ def saveMatrix(path, matrix):
 	writer.writerows(matrix)
 	file.close()
 
+
 def rmse(prediction, ground_truth):
 	prediction = prediction[ground_truth.nonzero()].flatten()
 	ground_truth = ground_truth[ground_truth.nonzero()].flatten()
-	return sqrt(mean_squared_error(prediction, ground_truth))
+	return math.sqrt(sklearn.metrics.mean_squared_error(prediction, ground_truth))
+
 
 def rootMeanSquareError(originalMatrix, predictMatrix):
-	meanError = mean_squared_error(originalMatrix, predictMatrix)
-	# print("meanError: {}".format(meanError))
-	squaredError = sqrt(meanError)
+	meanError = sklearn.metrics.mean_squared_error(originalMatrix, predictMatrix)
+	squaredError = math.sqrt(meanError)
 	return squaredError
+
 
 # calculate rmse for euclidean and pearson
 def calculate_rmse_euclidean(model):
 	testMatrix = load_test_matrix("data/test.dat")
 	userPrediction_e = getEMatrix(model, 'euclidean')
-
 	print('euclidean User-based CF RMSE: ' + str(rmse(userPrediction_e, testMatrix)))
+
 
 def calculate_rmse_pearson(model):
 	testMatrix = load_test_matrix("data/test.dat")
 	userPrediction_p = getEMatrix(model, 'pearson')
-	
 	print('pearson User-based CF RMSE: ' + str(rmse(userPrediction_p, testMatrix)))
+
 
 def calculate_root_square_error(model):
 	testMatrix = load_test_matrix("data/ratings.dat")
 	userPrediction_p = getEMatrix(model, 'pearson')
-	#saveMatrix(pearson_path, userPrediction_p)
-	
 	userPrediction_e = getEMatrix(model, 'euclidean')
-	#saveMatrix(euclidean_path, userPrediction_e)
-	
-	print('pearson User-based CF RMSE: ' + str(rootMeanSquareError(userPrediction_p, testMatrix)))
-	print('euclidean User-based CF RMSE: ' + str(rootMeanSquareError(userPrediction_e, testMatrix)))
-	
+	print('pearson User-based CF RSE: ' + str(rootMeanSquareError(userPrediction_p, testMatrix)))
+	print('euclidean User-based CF RSE: ' + str(rootMeanSquareError(userPrediction_e, testMatrix)))
+
+
 def update_u2m_euclidean(model):
 	result = euclidean.getRecomDict_User(model)
 	db = DatabaseHelper(password='asdfghjkl')
@@ -255,12 +279,30 @@ def update_m2m_pearson(model):
 if __name__ == '__main__':
 	model = MovieLens()
 
+	# Update recommendation result for user-movie (euclidean)
+	update_u2m_eu = multiprocessing.Process(target=update_u2m_euclidean, args=(model,))
+	update_u2m_eu.start()
+
+	# Update recommendation result for user-movie (pearson)
+	update_u2m_pc = multiprocessing.Process(target=update_u2m_pearson, args=(model,))
+	update_u2m_pc.start()
+
+	# Update recommendation result for movie-movie (euclidean)
+	update_m2m_eu = multiprocessing.Process(target=update_m2m_euclidean, args=(model,))
+	update_m2m_eu.start()
+
+	# Update recommendation result for movie-movie (pearson)
+	update_m2m_pc = multiprocessing.Process(target=update_m2m_pearson, args=(model,))
+	update_m2m_pc.start()
+
+	# Calculate RMSE for kNN with euclidean
 	calc_rmse_eu = multiprocessing.Process(target=calculate_rmse_euclidean, args=(model,))
 	calc_rmse_eu.start()
 
+	# Calculate RMSE for kNN with pearson correlation coefficient
 	calc_rmse_pr = multiprocessing.Process(target=calculate_rmse_pearson, args=(model,))
 	calc_rmse_pr.start()
 
+	# Calculate RSE for kNN for both PCC and EU
 	calc_rse = multiprocessing.Process(target=calculate_root_square_error, args=(model,))
 	calc_rse.start()
-
