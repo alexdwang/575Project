@@ -25,6 +25,8 @@ Download the 1M MovieLens data from [here](http://files.grouplens.org/datasets/m
 iconv -f iso-8859-1 -t utf-8 ratings.dat > ratings.dat.conv
 ```
 
+Don't forget to change the file names back to `.dat` after conversion.
+
 ## Populate Database
 
 Install and configure PostgreSQL. Creating a new user and database for the project is recommended. Then from the project root directory, run `psql` to create database schemas:
